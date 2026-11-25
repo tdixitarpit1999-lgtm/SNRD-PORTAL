@@ -100,3 +100,25 @@ async function init(){
   supabase.auth.onAuthStateChange(async(event,session)=>{if(event==='SIGNED_OUT'){showLogin()}});
 }
 init();
+
+// V4: usable menu and module previews while backend login is not connected.
+const previewModules = [
+ ['overview','Dashboard','School overview and quick actions'],['students','Students','Student register and admission'],['teachers','Teachers','Teacher directory and staff'],['classes','Classes & Sections','Medium, class and section structure'],['attendance','Attendance','Daily attendance preview'],['exams','Exams & Results','Exam schedule and results'],['fees','Fees','Fee structure and collection'],['documents','Documents','Admit cards, marksheets and uploads'],['reports','Reports','School reports'],['settings','Settings','Portal settings']
+];
+function previewModulePage(key){
+ const names=Object.fromEntries(previewModules.map(x=>[x[0],x[1]]));
+ const page=$('previewPage');
+ const content=key==='overview'?`<div class="preview-grid">${previewModules.slice(1).map(m=>`<button class="preview-tile" data-preview-page="${m[0]}">▦ ${m[1]}<small>${m[2]}</small></button>`).join('')}</div><div class="preview-card"><h3>School Structure</h3><p>PG–5 English Medium · Classes 6–8 Hindi + English · 9–12 Hindi · 11–12 Science / Arts</p><p>Academic Session: 2026–27</p></div>`:`<div class="preview-card"><h3>${names[key]||'Module'}</h3><p>This is a visual preview only. Real school data and actions will be connected after secure backend testing.</p><div class="preview-grid"><button class="preview-tile" data-preview-page="overview">← Dashboard<small>Return to overview</small></button><button class="preview-tile" data-preview-page="${key}">＋ ${names[key]}<small>Module preview</small></button></div></div>`;
+ page.innerHTML=`<button class="preview-back" id="previewBack">← Back to Login</button><h2>${names[key]||'Dashboard'}</h2>${content}<p class="prototype-note">SNRD PORTAL · Preview Mode · No real student data</p>`;
+ $('loginView').classList.add('hidden');$('dashboardView').classList.add('hidden');page.classList.remove('hidden');
+ page.querySelectorAll('[data-preview-page]').forEach(b=>b.addEventListener('click',()=>previewModulePage(b.dataset.previewPage)));
+ $('previewBack').addEventListener('click',()=>{page.classList.add('hidden');$('loginView').classList.remove('hidden')});
+}
+function openPreviewMenu(){
+ const drawer=$('previewDrawer'),overlay=$('previewOverlay');
+ $('previewMenuItems').innerHTML=previewModules.map(m=>`<button data-preview-page="${m[0]}">${m[1]}</button>`).join('');
+ drawer.classList.add('open');overlay.classList.add('show');
+ $('previewMenuItems').querySelectorAll('[data-preview-page]').forEach(b=>b.addEventListener('click',()=>{drawer.classList.remove('open');overlay.classList.remove('show');previewModulePage(b.dataset.previewPage)}));
+}
+$('menuBtn')?.addEventListener('click',()=>{if($('loginView').classList.contains('hidden')){$('sidebar')?.classList.toggle('open')}else openPreviewMenu()});
+$('previewOverlay')?.addEventListener('click',()=>{$('previewDrawer').classList.remove('open');$('previewOverlay').classList.remove('show')});
